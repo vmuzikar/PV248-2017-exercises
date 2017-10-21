@@ -36,7 +36,7 @@ class Person( DBItem ):
     # TODO: Update born/died if the name is already present but has null values for
     # those fields. We assume that names are unique (not entirely true in practice).
     def fetch_id( self ):
-        self.cursor.execute( "select id from person where name = ?", (self.name,) )
+        self.cursor.execute( "select id,born,died from person where name = ?", (self.name,) )
 
         # NB. The below lines had a bug in the original version of
         # scorelib-import.py (which however only becomes relevant when you
@@ -44,6 +44,10 @@ class Person( DBItem ):
         res = self.cursor.fetchone()
         if not res is None: # TODO born/died update should be done inside this if
             self.id = res[ 0 ]
+
+            if (self.born is not None and self.died is not None
+                and res[1] is None and res[2] is None):
+                self.cursor.execute("update person set born = ?, died = ? where id = ?", (self.born, self.died, self.id))
 
     def do_store( self ):
         print ("storing '%s'" % self.name)
